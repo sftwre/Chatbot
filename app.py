@@ -1,8 +1,34 @@
-import numpy as np
+import random
+import time
 import streamlit as st
+from openai import OpenAI
 
-st.header("Chat with AI!")
-st.title("Echo Bot 🤖")
+USER_EMOJI = '🧑‍🚀'
+ASSISTANT_EMOJI = '🤖'
+
+def response_generator():
+    """
+    Used for debugging
+    """
+    response = random.choice(
+        [
+            "Hello there! How can I assist you today?",
+            "Hi, human! Is there anything I can help you with?",
+            "Do you need help?",
+        ]
+    )
+
+    for word in response.split():
+        yield word + " "
+        time.sleep(0.1)
+
+st.header(f"{ASSISTANT_EMOJI} ChatGPT clone")
+
+client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+
+# set default model
+if 'openai_model' not in st.session_state:
+    st.session_state['openai_model'] = 'gpt-3.5-turbo'
 
 # initialize chat history
 if "messages" not in st.session_state:
@@ -10,18 +36,26 @@ if "messages" not in st.session_state:
 
 # display chat messages from history on app rerun
 for message in st.session_state.messages:
-    with st.chat_message(message['role']):
+    with st.chat_message(message['role'], avatar=message['avatar']):
         st.markdown(message['content'])
 
 # react to user input
 if prompt := st.chat_input("What is up?"):
-     st.chat_message("user").markdown(prompt)
-     st.session_state.messages.append({'role': 'user', 'content': prompt})
+     st.session_state.messages.append({'role': 'user', 'content': prompt, 'avatar': f'{USER_EMOJI}'})
+     st.chat_message('user', avatar=f'{USER_EMOJI}').markdown(prompt)
 
-     response = f"Echo: {prompt}"
-     # display assistant response in chat message container
-     with st.chat_message('assistant'):
-         st.markdown(response)
+     # display GPT 3.5 response
+     with st.chat_message('assistant', avatar=f'{ASSISTANT_EMOJI}'):
+         
+         stream = client.chat.completions.create(
+             model=st.session_state['openai_model'],
+             messages=[
+                 {'role': m['role'], 'content': m['content']}
+                 for m in st.session_state.messages
+             ],
+             stream=True
+         )
+         response = st.write_stream(stream)
          
      # add assistant response to chat history
-     st.session_state.messages.append({'role': 'assistant', 'content': response})
+     st.session_state.messages.append({'role': 'assistant', 'content': response, 'avatar': f'{ASSISTANT_EMOJI}'})
