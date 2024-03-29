@@ -6,22 +6,6 @@ from openai import OpenAI
 USER_EMOJI = '🧑‍🚀'
 ASSISTANT_EMOJI = '🤖'
 
-def response_generator():
-    """
-    Used for debugging
-    """
-    response = random.choice(
-        [
-            "Hello there! How can I assist you today?",
-            "Hi, human! Is there anything I can help you with?",
-            "Do you need help?",
-        ]
-    )
-
-    for word in response.split():
-        yield word + " "
-        time.sleep(0.1)
-
 st.header(f"{ASSISTANT_EMOJI} ChatGPT clone")
 
 client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
